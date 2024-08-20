@@ -12,19 +12,18 @@ COPY ./app /app
 WORKDIR /app
 EXPOSE 8000
 
-# 1- cria uma venv nova
-# 2- define caminho, instala e upgrade no python
-# 3- define caminho e instala os requirements
-# 4- remove o diretório tmp (garante que o docker sempre estará leve)
-# 5- comando adduser, cria um novo usuário na imagem
 ARG DEV=false
 RUN python -m venv /py && \
     /py/bin/pip install --upgrade pip && \
+    apk add --update --no-cache postgresql-client && \
+    apk add --update --no-cache --virtual .tmp-build-deps \
+        build-base postgresql-dev musl-dev && \
     /py/bin/pip install -r /tmp/requirements.txt && \
     if [ $DEV = "true" ]; \
         then /py/bin/pip install -r /tmp/requirements.dev.txt ; \
     fi && \
     rm -rf /tmp && \
+    apk del .tmp-build-deps && \
     adduser \
         --disabled-password \
         --no-create-home \
